@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
+    <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar-nft.js"></script>
+    <!-- Include D3.js -->
+    <script src="https://d3js.org/d3.v5.min.js"></script>
+    <!-- Include Three.js if needed -->
+    <script src="https://cdn.jsdelivr.net/npm/three@0.132.2/build/three.min.js"></script>
+</head>
+<body style="margin: 0; overflow: hidden;">
+    <a-scene embedded arjs>
+        <!-- define AR marker -->
+        <a-marker preset="custom" type="pattern" url="path/to/your/qr/pattern-marker.patt">
+            <!-- Your 3D model -->
+            <a-entity
+                gltf-model="url(to/your/dragon/model.gltf)"
+                scale="0.2 0.2 0.2"
+                animation-mixer>
+            </a-entity>
+
+            <!-- Your data visualization placeholder -->
+            <!-- This will need to be an object that D3.js can interact with, potentially a plane onto which you can render a texture. -->
+            <a-plane position="0 0 0" material="opacity: 0.5;"></a-plane>
+        </a-marker>
+
+        <a-entity camera></a-entity>
+    </a-scene>
+
+    <script>
+        // Your existing D3.js code would need to be adapted to work within the AR environment.
+        // This could potentially involve rendering to a texture that can be displayed in your AR scene.
+        // Here, you should also handle the logic for the filters and interact with the d3.js visualization accordingly.
+
+        // Additionally, you'll need to manage the 3D model of the dragon, including triggering animations and handling its movement around the scene.
+    </script>
+</body>
+</html>
