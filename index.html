@@ -1,87 +1,53 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
-    <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
-    <style>
-        #controls {
-            position: fixed;
-            bottom: 10px;
-            left: 10px;
-            z-index: 999;
-        }
-        button {
-            margin-top: 5px;
-        }
-    </style>
+    <script src="https://d3js.org/d3.v5.min.js"></script>
 </head>
-<body style='margin : 0; overflow: hidden;'>
+<body>
 
-<a-scene embedded arjs='sourceType: webcam;'>
-    <a-assets>
-        <img id="d3-image" crossorigin="anonymous">
-    </a-assets>
-
-    <a-marker preset="hiro">
-        <a-plane position="0 0 0" rotation="-90 0 0" width="1" height="1" material="src: #d3-image;"></a-plane>
-    </a-marker>
-    <a-entity camera></a-entity>
-</a-scene>
-
-<iframe id="d3-iframe" style="display:none;" src="visualization.html"></iframe>
-
-<div id="controls">
-    <!-- Buttons to change the color of the circles -->
-    <button onclick="updateCircles('color', 'red')">Red</button>
-    <button onclick="updateCircles('color', 'green')">Green</button>
-    <button onclick="updateCircles('color', 'blue')">Blue</button>
-    
-    <!-- Buttons to change the size of the circles -->
-    <button onclick="updateCircles('size', 'small')">Small</button>
-    <button onclick="updateCircles('size', 'medium')">Medium</button>
-    <button onclick="updateCircles('size', 'large')">Large</button>
-
-    <!-- Buttons to change the number of circles -->
-    <button onclick="updateCircles('number', 1)">One Circle</button>
-    <button onclick="updateCircles('number', 2)">Two Circles</button>
-    <button onclick="updateCircles('number', 3)">Three Circles</button>
-</div>
+<canvas id="d3-canvas" width="300" height="300"></canvas>
 
 <script>
-    var iframe = document.getElementById('d3-iframe');
-    var d3Image = document.getElementById('d3-image');
-    var circleProperties = [{x: 150, y: 150, radius: 50, color: 'green'}]; // Default properties
+    var canvas = document.getElementById('d3-canvas');
+    var context = canvas.getContext('2d');
+    var currentParams = {
+        color: 'green',
+        size: 'medium',
+        number: 1
+    };
 
-    // Function to update the circles based on user input
-    function updateCircles(property, value) {
-        if (property === 'color') {
-            circleProperties.forEach(function(circle) {
-                circle.color = value;
-            });
-        } else if (property === 'size') {
-            var sizes = { small: 30, medium: 50, large: 70 };
-            circleProperties.forEach(function(circle) {
-                circle.radius = sizes[value];
-            });
-        } else if (property === 'number') {
-            circleProperties = []; // Reset the array
-            for (var i = 0; i < value; i++) {
-                // Add circles with default or previous properties
-                circleProperties.push({x: 100 + (i * 50), y: 150, radius: 50, color: 'green'});
-            }
-        }
+    function drawCircles(params) {
+        var sizes = { small: 40, medium: 70, large: 100 };
+        var positions = [150]; // Default for one circle
 
-        // Send the updated properties to the iframe to redraw
-        iframe.contentWindow.postMessage({
-            type: 'updateVisualization',
-            circleProperties: circleProperties
-        }, '*');
+        if (params.number === '2') { positions = [100, 200]; }
+        else if (params.number === '3') { positions = [75, 150, 225]; }
+
+        context.clearRect(0, 0, canvas.width, canvas.height);
+
+        positions.forEach(function(pos) {
+            context.beginPath();
+            context.arc(pos, 150, sizes[params.size], 0, 2 * Math.PI, false);
+            context.fillStyle = params.color;
+            context.fill();
+        });
+
+        sendImage();
     }
 
-    // Listen for the 'render' message from the visualization
+    function sendImage() {
+        var dataUrl = canvas.toDataURL();
+        window.parent.postMessage({ type: 'render', dataUrl: dataUrl }, '*');
+    }
+
+    drawCircles(currentParams); // Draw with default settings
+
     window.addEventListener('message', function(event) {
-        if (event.data.type === 'render') {
-            d3Image.setAttribute('src', event.data.dataUrl);
+        if (event.data.type === 'updateVisualization') {
+            currentParams.color = event.data.color || currentParams.color;
+            currentParams.size = event.data.size || currentParams.size;
+            currentParams.number = event.data.number || currentParams.number;
+            drawCircles(currentParams);
         }
     });
 </script>
