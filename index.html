@@ -16,12 +16,10 @@
         <a-marker preset="hiro"> <!-- consider using your custom marker -->
     <!-- Your AR content goes here, e.g., the plane with the HTML shader -->
             <!-- Use the HTML as a texture on a plane in A-Frame -->
-            <a-plane
-                position="0 0 0"
-                rotation="-90 0 0"
-                material="shader: html; target: #d3frame;"
-                width="1" height="1">
-            </a-plane>
+<a-marker type='pattern' url='marker.patt'>
+    <a-box position='0 0.5 0' material='color: yellow;'></a-box>
+</a-marker>
+
         </a-marker>
         <a-entity camera></a-entity>
     </a-scene>
