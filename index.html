@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Interactive AR Visualization</title>
+    <title>Real-time AR Data Visualization</title>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
@@ -9,6 +9,7 @@
     <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
     <!-- AR.js for A-Frame -->
     <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
+
     <style>
         body { margin: 0; overflow: hidden; }
         #control-container {
@@ -17,81 +18,62 @@
             background: rgba(255,255,255,0.6); z-index: 999;
         }
         .control { margin: 5px; }
-        #dynamic-canvas { display: none; } /* Hide the canvas used for drawing */
     </style>
 </head>
 <body>
 
-<a-scene embedded arjs>
+<a-scene embedded arjs='sourceType: webcam;'>
     <a-assets>
-        <img id="dynamic-texture" crossorigin="anonymous">
+        <!-- Placeholder for images/textures -->
     </a-assets>
+
     <a-marker preset="hiro">
-        <a-plane position="0 0 0" rotation="-90 0 0" width="1" height="1" material="src: #dynamic-texture;"></a-plane>
+        <!-- The entity we will be changing based on control input -->
+        <a-entity id="modifiable-entity" geometry="primitive: sphere" position="0 0 0" material="color: red"></a-entity>
     </a-marker>
+
     <a-entity camera></a-entity>
 </a-scene>
 
 <div id="control-container">
-    <!-- Example controls for color, size, and number -->
     <select id="colorSelector" class="control">
-        <option value="green">Green</option>
         <option value="red">Red</option>
+        <option value="green">Green</option>
         <option value="blue">Blue</option>
     </select>
-    <select id="sizeSelector" class="control">
-        <option value="small">Small</option>
-        <option value="medium">Medium</option>
-        <option value="large">Large</option>
-    </select>
-    <select id="numberSelector" class="control">
-        <option value="1">One</option>
-        <option value="2">Two</option>
-        <option value="3">Three</option>
-    </select>    
-</div>
 
-<!-- Canvas for drawing the dynamic texture -->
-<canvas id="dynamic-canvas" width="512" height="512"></canvas>
+    <select id="shapeSelector" class="control">
+        <option value="sphere">Sphere</option>
+        <option value="box">Box</option>
+        <option value="cylinder">Cylinder</option>
+    </select>
+
+    <!-- Add other controls here as needed -->
+</div>
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        var canvas = document.getElementById('dynamic-canvas');
-        var context = canvas.getContext('2d');
-        var texture = document.getElementById('dynamic-texture');
+        // References to our scene and modifiable entity
+        var scene = document.querySelector('a-scene');
+        var entity = document.querySelector('#modifiable-entity');
 
-        function drawVisualization() {
-            // Clear previous content
-            context.clearRect(0, 0, canvas.width, canvas.height);
-
-            // Get user-selected values
+        // Function to update the entity based on the controls' current state
+        function updateEntity() {
             var color = document.getElementById('colorSelector').value;
-            var size = document.getElementById('sizeSelector').value; // small, medium, large as example
-            var number = parseInt(document.getElementById('numberSelector').value); // 1, 2, 3 as example
+            var shape = document.getElementById('shapeSelector').value;
 
-            // Convert 'size' to an actual pixel value
-            var sizes = { small: 50, medium: 100, large: 150 };
-            var actualSize = sizes[size];
+            // Update the entity's material and geometry based on selected values
+            entity.setAttribute('material', 'color', color);
+            entity.setAttribute('geometry', 'primitive', shape);
 
-            // Placeholder drawing logic, replace with your visualization
-            for (var i = 0; i < number; i++) {
-                context.beginPath();
-                context.arc(256, 100 + (i * 200), actualSize, 0, 2 * Math.PI, false); // Simple circles
-                context.fillStyle = color;
-                context.fill();
-            }
-
-            // Update the texture in the AR scene with the new canvas content
-            texture.setAttribute('src', canvas.toDataURL());
+            // Force the scene to render the next frame
+            scene.render();
         }
 
-        // Event listeners for the controls
+        // Listen for changes on each control and update the entity accordingly
         document.querySelectorAll('.control').forEach(function(control) {
-            control.addEventListener('change', drawVisualization);
+            control.addEventListener('change', updateEntity);
         });
-
-        // Initial draw
-        drawVisualization();
     });
 </script>
 
