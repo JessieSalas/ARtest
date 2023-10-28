@@ -1,34 +1,41 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <!-- Include D3.js -->
     <script src="https://d3js.org/d3.v5.min.js"></script>
 </head>
 <body>
 
-<!-- D3 will draw on this canvas -->
 <canvas id="d3-canvas" width="300" height="300"></canvas>
 
 <script>
-    // Drawing function setup for D3
-    function draw() {
-        var canvas = document.getElementById('d3-canvas');
-        var context = canvas.getContext('2d');
+    var canvas = document.getElementById('d3-canvas');
+    var context = canvas.getContext('2d');
 
-        // TODO: Use D3 to create your visualization here
+    // Function to draw one or multiple circles
+    function drawCircles(circleProperties) {
+        // Clear the canvas before drawing the next frame
+        context.clearRect(0, 0, canvas.width, canvas.height);
 
-        // After drawing, post the image data to the parent document
+        circleProperties.forEach(function(circle) {
+            context.beginPath();
+            context.arc(circle.x, circle.y, circle.radius, 0, 2 * Math.PI, false);
+            context.fillStyle = circle.color;
+            context.fill();
+        });
+
+        // Send the rendered image back to the main document
         var dataUrl = canvas.toDataURL("image/png");
         window.parent.postMessage({ type: 'render', dataUrl: dataUrl }, '*');
     }
 
-    // Trigger the drawing function
-    draw();
+    // Default drawing
+    drawCircles([{x: 150, y: 150, radius: 50, color: 'green'}]);
 
-    // Listen for any incoming messages to redraw or update the visualization
+    // Listen for messages to redraw with new properties
     window.addEventListener('message', function(event) {
-        // Check for specific instructions, call draw() again if needed
-        // This is where you'll handle updates/modifications to the D3 visualization
+        if (event.data.type === 'updateVisualization') {
+            drawCircles(event.data.circleProperties);
+        }
     });
 </script>
 
