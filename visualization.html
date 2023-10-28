@@ -1,74 +1,49 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <meta charset="utf-8" />
-    <script src="https://d3js.org/d3.v7.min.js"></script>
+<head>
+    <meta charset="utf-8">
+    <script src="https://d3js.org/d3.v5.min.js"></script>
     <style>
-      #my_dataviz {
-        width: 300px;
-        height: 300px;
-      }
+        /* Styles for your visualization if any */
     </style>
-  </head>
-  <body>
-    <div id="my_dataviz"></div>
+</head>
+<body>
+<script>
+    // Assuming you have some data to visualize (this is just a placeholder)
+    var dataset = { /* your data */ };
 
-    <script>
-      // Set the dimensions and margins of the graph
-      var margin = { top: 10, right: 30, bottom: 30, left: 40 },
-        width = 300 - margin.left - margin.right,
-        height = 300 - margin.top - margin.bottom;
+    // Create SVG element as before
+    var svg = d3.select("body")
+                .append("svg")
+                .attr("width", 300)
+                .attr("height", 300);
 
-      // Append the SVG object to the body of the page
-      var svg = d3
-        .select("#my_dataviz")
-        .append("svg")
-        .attr("width", width + margin.left + margin.right)
-        .attr("height", height + margin.top + margin.bottom)
-        .append("g")
-        .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+    // Draw your visualization (this is a simple representation, replace with your actual visualization code)
+    var circle = svg.append("circle")
+                    .attr("cx", 150)
+                    .attr("cy", 150)
+                    .attr("r", 50)  // default radius, to be changed by slider
+                    .attr("fill", "blue");
 
-      // Create data
-      var data = [{ x: 10, y: 20 }, { x: 40, y: 90 }, { x: 80, y: 50 }];
+    // Function to update the visualization, modify depending on your visualization's requirements
+    function updateCircleRadius(newRadius) {
+        // Update the circle radius or any other properties based on newRadius
+        circle.transition()
+              .duration(1000) // smooth transition
+              .attr("r", newRadius);
+    }
 
-      // X axis scale
-      var x = d3
-        .scaleLinear()
-        .domain([0, 100])
-        .range([0, width]);
+    // Listen for messages from the parent document
+    window.addEventListener('message', function(event) {
+        // Check the message contents, perform any necessary validations for security
+        if (event.data.type === 'updateRadius') {
+            // Received the new radius value from the slider, update the visualization
+            updateCircleRadius(event.data.value);
+        }
+    }, false);
 
-      // Y axis scale
-      var y = d3
-        .scaleLinear()
-        .domain([0, 100])
-        .range([height, 0]);
+    // The rest of your D3.js setup as it was before...
 
-      // Add scales to axis
-      var xAxis = d3.axisBottom(x).ticks(5);
-      var yAxis = d3.axisLeft(y).ticks(5);
-
-      //Append group and insert axis
-      svg.append("g").attr("transform", "translate(0," + height + ")").call(xAxis);
-      svg.append("g").call(yAxis);
-
-      // Add the line
-      svg
-        .append("path")
-        .datum(data)
-        .attr("fill", "none")
-        .attr("stroke", "steelblue")
-        .attr("stroke-width", 1.5)
-        .attr(
-          "d",
-          d3
-            .line()
-            .x(function (d) {
-              return x(d.x);
-            })
-            .y(function (d) {
-              return y(d.y);
-            })
-        );
-    </script>
-  </body>
+</script>
+</body>
 </html>
