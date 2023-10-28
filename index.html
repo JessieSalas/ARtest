@@ -1,12 +1,11 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>AR Data Visualization</title>
+    <title>Interactive AR Data Visualization</title>
     <meta charset="UTF-8">
-    <!-- Ensuring proper scaling on mobile devices -->
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
-    <!-- A-Frame and AR.js libraries -->
+    <!-- Importing A-Frame and AR.js libraries -->
     <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
     <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
 
@@ -22,7 +21,7 @@
             text-align: center; 
             padding: 5px; 
             background: rgba(255,255,255,0.6); 
-            z-index: 999;  /* ensures the controls are above other elements */
+            z-index: 999; /* ensures the controls are above other elements */
         }
         .control { 
             margin: 5px; 
@@ -31,71 +30,77 @@
 </head>
 <body>
 
+<!-- A-Frame AR scene setup -->
 <a-scene embedded arjs='sourceType: webcam;'>
+    <!-- Assets such as textures or models would go here -->
     <a-assets>
         <img id="d3-image" crossorigin="anonymous">
     </a-assets>
+
+    <!-- Marker on which the AR content will be displayed -->
     <a-marker preset="hiro">
+        <!-- Object(s) representing your data visualization -->
         <a-plane position="0 0 0" rotation="-90 0 0" width="1" height="1" material="src: #d3-image;"></a-plane>
     </a-marker>
+
+    <!-- Setting up the AR camera -->
     <a-entity camera></a-entity>
 </a-scene>
 
+<!-- User controls for interactive data manipulation -->
 <div id="control-container">
-    <!-- Control elements for various properties -->
+    <!-- Example controls for color, size, and number -->
     <select id="colorSelector" class="control">
         <option value="green">Green</option>
         <option value="red">Red</option>
         <option value="blue">Blue</option>
     </select>
-
     <select id="sizeSelector" class="control">
         <option value="small">Small</option>
         <option value="medium">Medium</option>
         <option value="large">Large</option>
     </select>
-
     <select id="numberSelector" class="control">
-        <option value="1">One Circle</option>
-        <option value="2">Two Circles</option>
-        <option value="3">Three Circles</option>
+        <option value="1">One</option>
+        <option value="2">Two</option>
+        <option value="3">Three</option>
     </select>
 </div>
 
-<iframe id="d3-iframe" style="display:none;" src="visualization.html"></iframe>
-
 <script>
     document.addEventListener('DOMContentLoaded', (event) => {
-        const iframe = document.getElementById('d3-iframe');
+        const img = document.getElementById('d3-image'); // Reference to the image used in AR scene
 
-        // Function to handle control change
-        function handleControlChange() {
-            const message = {
-                type: 'updateVisualization',
-                color: document.getElementById('colorSelector').value,
-                size: document.getElementById('sizeSelector').value,
-                number: document.getElementById('numberSelector').value
-            };
-            iframe.contentWindow.postMessage(message, '*');
+        function updateVisualization() {
+            // Here, you'd make a call to your data visualization update function or method
+            // For the purpose of this example, we'll simulate a change in the visualization based on user input.
+
+            // Get values from controls
+            const color = document.getElementById('colorSelector').value;
+            const size = document.getElementById('sizeSelector').value;
+            const number = document.getElementById('numberSelector').value;
+
+            // Now, you'd use these parameters (color, size, number) to update your data visualization.
+            // This could mean changing attributes of 3D objects, updating a texture, modifying a shader, etc.
+            // For simplicity, we'll simulate this by just logging the new settings.
+
+            console.log(`Updating visualization with color: ${color}, size: ${size}, number: ${number}`);
+            
+            // This is where you would implement the logic or function calls to update the AR content
+            // based on the new parameters selected by the user.
+            // After updating the visualization, you might end up with a new image/texture that you want to display.
+
+            // Set the new image (replace 'newImageUrl' with the actual new image URL after your update)
+            // img.setAttribute('src', newImageUrl);
         }
 
-        // Attaching event listeners to each control
+        // Adding event listeners to the controls to detect changes
         document.querySelectorAll('.control').forEach((control) => {
-            control.addEventListener('change', handleControlChange);
-            
-            // Prevent touch event interference with AR view
-            control.addEventListener('touchstart', function(e) {
-                e.stopPropagation();
-            }, { passive: false }); // ensures that the event listener doesn't neglect preventDefault
+            control.addEventListener('change', updateVisualization);
         });
 
-        // Listen for messages from the iframe
-        window.addEventListener('message', function(event) {
-            if (event.data.type === 'render') {
-                const img = document.getElementById('d3-image');
-                img.setAttribute('src', event.data.dataUrl); // Use setAttribute for elements within a-scene
-            }
-        });
+        // Trigger initial update to ensure the visualization reflects the default settings
+        updateVisualization();
     });
 </script>
 
