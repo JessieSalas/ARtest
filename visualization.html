@@ -10,14 +10,29 @@
 <script>
     var canvas = document.getElementById('d3-canvas');
     var context = canvas.getContext('2d');
+    var currentParams = {
+        color: 'green',
+        size: 'medium',
+        number: 1
+    };
 
-    function drawCircle(radius) {
+    function drawCircles(params) {
+        var sizes = { small: 40, medium: 70, large: 100 };
+        var positions = [150]; // Default for one circle
+
+        if (params.number === '2') { positions = [100, 200]; }
+        else if (params.number === '3') { positions = [75, 150, 225]; }
+
         context.clearRect(0, 0, canvas.width, canvas.height);
-        context.beginPath();
-        context.arc(150, 150, radius, 0, 2 * Math.PI, false);
-        context.fillStyle = 'green';
-        context.fill();
-        sendImage(); // Send the canvas data to the parent document
+
+        positions.forEach(function(pos) {
+            context.beginPath();
+            context.arc(pos, 150, sizes[params.size], 0, 2 * Math.PI, false);
+            context.fillStyle = params.color;
+            context.fill();
+        });
+
+        sendImage();
     }
 
     function sendImage() {
@@ -25,11 +40,14 @@
         window.parent.postMessage({ type: 'render', dataUrl: dataUrl }, '*');
     }
 
-    drawCircle(50); // Draw a default circle
+    drawCircles(currentParams); // Draw with default settings
 
     window.addEventListener('message', function(event) {
-        if (event.data.type === 'updateRadius') {
-            drawCircle(event.data.value);
+        if (event.data.type === 'updateVisualization') {
+            currentParams.color = event.data.color || currentParams.color;
+            currentParams.size = event.data.size || currentParams.size;
+            currentParams.number = event.data.number || currentParams.number;
+            drawCircles(currentParams);
         }
     });
 </script>
