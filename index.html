@@ -57,20 +57,36 @@
     var d3Canvas = document.getElementById('d3-canvas');
     var d3Context = d3Canvas.getContext('2d');
 
-    // When the iframe is loaded, draw its content onto the canvas.
-    iframe.onload = function() {
-        function draw() {
-            // Use html2canvas to capture the iframe content.
-            html2canvas(iframe.contentDocument.body, {canvas: d3Canvas, logging: true, letterRendering: 1, allowTaint: true})
-                .then(function() {
-                    requestAnimationFrame(draw);
-                })
-                .catch(function(error) {
-                    console.error('An error occurred while rendering the canvas:', error);
+    // Define a function to draw the iframe content onto the canvas using html2canvas.
+    function updateCanvas() {
+        html2canvas(iframe.contentDocument.body, {
+            canvas: d3Canvas,
+            onclone: (document) => {
+                // Show everything in the cloned document, regardless of scroll position.
+                let elements = document.querySelectorAll('body, body *');
+                elements.forEach(el => {
+                    if (['script', 'style', 'iframe', 'canvas'].includes(el.tagName.toLowerCase())) {
+                        return;
+                    }
+                    el.style.transform = 'none';
                 });
-        }
-        draw();
-    };
+            }
+        }).then(function() {
+            // This texture needs to be updated in A-Frame's asset system.
+            var texture = new THREE.Texture(d3Canvas);
+            texture.needsUpdate = true;
+            
+            // Apply the updated texture to the material of the plane in A-Frame.
+            var plane = document.querySelector('a-plane');
+            plane.getObject3D('mesh').material.map = texture;
+            plane.getObject3D('mesh').material.needsUpdate = true;
+        }).catch(function(error) {
+            console.error('An error occurred while rendering the canvas:', error);
+        });
+    }
+
+    // Set up an interval to continuously update the canvas.
+    var updateInterval = setInterval(updateCanvas, 100);  // Adjust interval as needed.
 
     slider.addEventListener("input", function() {
         // Send a message to the iframe with the new value
@@ -79,8 +95,6 @@
             value: this.value
         }, '*');
     });
-
-    // The script continues to listen for slider changes and communicates with the iframe to update the visualization.
 </script>
 
 </body>
