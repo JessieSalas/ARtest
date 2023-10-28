@@ -1,54 +1,34 @@
 <!DOCTYPE html>
 <html>
 <head>
+    <!-- Include D3.js -->
     <script src="https://d3js.org/d3.v5.min.js"></script>
 </head>
 <body>
 
+<!-- D3 will draw on this canvas -->
 <canvas id="d3-canvas" width="300" height="300"></canvas>
 
 <script>
-    var canvas = document.getElementById('d3-canvas');
-    var context = canvas.getContext('2d');
-    var currentParams = {
-        color: 'green',
-        size: 'medium',
-        number: 1
-    };
+    // Drawing function setup for D3
+    function draw() {
+        var canvas = document.getElementById('d3-canvas');
+        var context = canvas.getContext('2d');
 
-    function drawCircles(params) {
-        var sizes = { small: 40, medium: 70, large: 100 };
-        var positions = [150]; // Default for one circle
+        // TODO: Use D3 to create your visualization here
 
-        if (params.number === '2') { positions = [100, 200]; }
-        else if (params.number === '3') { positions = [75, 150, 225]; }
-
-        context.clearRect(0, 0, canvas.width, canvas.height);
-
-        positions.forEach(function(pos) {
-            context.beginPath();
-            context.arc(pos, 150, sizes[params.size], 0, 2 * Math.PI, false);
-            context.fillStyle = params.color;
-            context.fill();
-        });
-
-        sendImage();
-    }
-
-    function sendImage() {
-        var dataUrl = canvas.toDataURL();
+        // After drawing, post the image data to the parent document
+        var dataUrl = canvas.toDataURL("image/png");
         window.parent.postMessage({ type: 'render', dataUrl: dataUrl }, '*');
     }
 
-    drawCircles(currentParams); // Draw with default settings
+    // Trigger the drawing function
+    draw();
 
+    // Listen for any incoming messages to redraw or update the visualization
     window.addEventListener('message', function(event) {
-        if (event.data.type === 'updateVisualization') {
-            currentParams.color = event.data.color || currentParams.color;
-            currentParams.size = event.data.size || currentParams.size;
-            currentParams.number = event.data.number || currentParams.number;
-            drawCircles(currentParams);
-        }
+        // Check for specific instructions, call draw() again if needed
+        // This is where you'll handle updates/modifications to the D3 visualization
     });
 </script>
 
