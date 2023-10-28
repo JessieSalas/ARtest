@@ -4,45 +4,47 @@
     <meta charset="utf-8">
     <script src="https://d3js.org/d3.v5.min.js"></script>
     <style>
-        /* Styles for your visualization if any */
+        body {
+            margin: 0;
+        }
+        /* Add any additional styling you need for your visualization */
     </style>
 </head>
 <body>
 <script>
-    // Assuming you have some data to visualize (this is just a placeholder)
-    var dataset = { /* your data */ };
+    // Create a canvas element. We're using D3.js, but we're drawing on a canvas so we can integrate with A-Frame/WebGL.
+    var canvas = d3.select("body").append("canvas")
+                    .attr("width", 300)
+                    .attr("height", 300)
+                    .node();
 
-    // Create SVG element as before
-    var svg = d3.select("body")
-                .append("svg")
-                .attr("width", 300)
-                .attr("height", 300);
+    var context = canvas.getContext("2d");
 
-    // Draw your visualization (this is a simple representation, replace with your actual visualization code)
-    var circle = svg.append("circle")
-                    .attr("cx", 150)
-                    .attr("cy", 150)
-                    .attr("r", 50)  // default radius, to be changed by slider
-                    .attr("fill", "blue");
+    // Function to draw a circle with a variable radius on the canvas.
+    function drawCircle(radius) {
+        // Clear the previous content. Important to avoid drawing over the previous frame.
+        context.clearRect(0, 0, canvas.width, canvas.height);
 
-    // Function to update the visualization, modify depending on your visualization's requirements
-    function updateCircleRadius(newRadius) {
-        // Update the circle radius or any other properties based on newRadius
-        circle.transition()
-              .duration(1000) // smooth transition
-              .attr("r", newRadius);
+        // Draw the new circle.
+        context.beginPath();
+        context.arc(150, 150, radius, 0, 2 * Math.PI, false);
+        context.fillStyle = 'green'; // Or any other color or logic you prefer.
+        context.fill();
     }
 
-    // Listen for messages from the parent document
+    // Default circle, you can set this to match whatever initial state you prefer.
+    drawCircle(50);
+
+    // Listen for messages from the parent document. This is how we'll communicate with the AR scene.
     window.addEventListener('message', function(event) {
-        // Check the message contents, perform any necessary validations for security
-        if (event.data.type === 'updateRadius') {
-            // Received the new radius value from the slider, update the visualization
-            updateCircleRadius(event.data.value);
+        // Validate message information for security if necessary. Be cautious with `event.origin` and the data you're expecting.
+        if (event.data && event.data.type === 'updateRadius') {
+            // Call the drawing function with the new radius.
+            drawCircle(event.data.value);
         }
     }, false);
 
-    // The rest of your D3.js setup as it was before...
+    // The setup is done. Now the page listens for messages and updates the canvas drawing accordingly.
 
 </script>
 </body>
