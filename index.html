@@ -3,98 +3,65 @@
 <head>
     <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
     <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.3.2/html2canvas.min.js"></script>
+    <script src="https://d3js.org/d3.v5.min.js"></script>
     <style>
-        #ar-container {
-            position: relative;
-            z-index: 0;
-        }
-        #overlay {
-            position: absolute;
-            top: 10px;
-            left: 10px;
-            z-index: 1;
-        }
-        #slider {
-            position: fixed; /* Stay in place */
-            z-index: 1; /* Sit on top */
-            left: 0;
-            bottom: 0;
-            width: 100%;
-            background-color: rgba(255,255,255,0.5);
-            text-align: center;
-        }
+        body { margin: 0; overflow: hidden; }
+        #ar-container { position: relative; }
+        #slider { position: fixed; bottom: 10px; left: 50%; transform: translateX(-50%); }
     </style>
 </head>
-<body style="margin: 0; overflow: hidden;">
+<body>
 
 <div id="ar-container">
     <a-scene embedded arjs='sourceType: webcam;'>
         <a-assets>
-            <!-- Define the canvas as a texture -->
-            <canvas id="d3-canvas" crossorigin></canvas>
+            <canvas id="d3-canvas" width="300" height="300"></canvas>
         </a-assets>
         <a-marker preset="hiro">
-            <!-- Apply the texture on a plane geometry -->
             <a-plane position="0 0 0" rotation="-90 0 0" width="1" height="1" material="src: #d3-canvas; side: double;"></a-plane>
         </a-marker>
         <a-entity camera></a-entity>
     </a-scene>
 </div>
 
-<div id="overlay">
-    <iframe id="d3-iframe" style="display: none;" src="visualization.html" width="300" height="300"></iframe>
-</div>
-
-<!-- Slider to control D3 visualization -->
 <div id="slider">
-    <input type="range" min="1" max="100" value="50" class="slider" id="myRange">
+    <input type="range" min="10" max="100" value="50" id="myRange">
 </div>
 
 <script>
-    var slider = document.getElementById("myRange");
-    var iframe = document.getElementById('d3-iframe');
     var d3Canvas = document.getElementById('d3-canvas');
-    var d3Context = d3Canvas.getContext('2d');
+    var context = d3Canvas.getContext('2d');
+    var slider = document.getElementById('myRange');
 
-    // Define a function to draw the iframe content onto the canvas using html2canvas.
-    function updateCanvas() {
-        html2canvas(iframe.contentDocument.body, {
-            canvas: d3Canvas,
-            onclone: (document) => {
-                // Show everything in the cloned document, regardless of scroll position.
-                let elements = document.querySelectorAll('body, body *');
-                elements.forEach(el => {
-                    if (['script', 'style', 'iframe', 'canvas'].includes(el.tagName.toLowerCase())) {
-                        return;
-                    }
-                    el.style.transform = 'none';
-                });
-            }
-        }).then(function() {
-            // This texture needs to be updated in A-Frame's asset system.
-            var texture = new THREE.Texture(d3Canvas);
-            texture.needsUpdate = true;
-            
-            // Apply the updated texture to the material of the plane in A-Frame.
-            var plane = document.querySelector('a-plane');
-            plane.getObject3D('mesh').material.map = texture;
-            plane.getObject3D('mesh').material.needsUpdate = true;
-        }).catch(function(error) {
-            console.error('An error occurred while rendering the canvas:', error);
-        });
+    function drawCircle(radius) {
+        context.clearRect(0, 0, d3Canvas.width, d3Canvas.height); // Clear the canvas
+        context.beginPath();
+        context.arc(150, 150, radius, 0, 2 * Math.PI, false);
+        context.fillStyle = 'green';
+        context.fill();
+        updateTexture(); // Update the texture in A-Frame after drawing
     }
 
-    // Set up an interval to continuously update the canvas.
-    var updateInterval = setInterval(updateCanvas, 100);  // Adjust interval as needed.
+    function updateTexture() {
+        var plane = document.querySelector('a-plane');
+        var material = plane.getObject3D('mesh').material;
+        material.map.image = d3Canvas;
+        material.map.needsUpdate = true;
+        material.needsUpdate = true;
+    }
+
+    // Initial draw
+    drawCircle(parseInt(slider.value));
 
     slider.addEventListener("input", function() {
-        // Send a message to the iframe with the new value
-        iframe.contentWindow.postMessage({
-            type: 'updateRadius',
-            value: this.value
-        }, '*');
+        drawCircle(parseInt(this.value));
     });
+
+    // For AR.js to work properly, especially on mobile devices, it's important to handle the 'touchmove' event.
+    document.addEventListener('touchmove', function(e) {
+        e.preventDefault();
+    }, { passive: false });
+
 </script>
 
 </body>
