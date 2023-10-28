@@ -1,51 +1,88 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <!-- Include A-Frame and other required libraries -->
     <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
     <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
+    <style>
+        #controls {
+            position: fixed;
+            bottom: 10px;
+            left: 10px;
+            z-index: 999;
+        }
+        button {
+            margin-top: 5px;
+        }
+    </style>
 </head>
-<body style='margin: 0; overflow: hidden;'>
+<body style='margin : 0; overflow: hidden;'>
 
 <a-scene embedded arjs='sourceType: webcam;'>
-    <!-- Assets to define external content -->
     <a-assets>
         <img id="d3-image" crossorigin="anonymous">
     </a-assets>
 
-    <!-- Marker to define what we track -->
     <a-marker preset="hiro">
-        <!-- Using the image as a texture for the plane -->
         <a-plane position="0 0 0" rotation="-90 0 0" width="1" height="1" material="src: #d3-image;"></a-plane>
     </a-marker>
-
-    <!-- Defining the camera for AR -->
     <a-entity camera></a-entity>
 </a-scene>
 
-<!-- Invisible iframe for the D3 content -->
 <iframe id="d3-iframe" style="display:none;" src="visualization.html"></iframe>
 
-<!-- UI for user controls -->
 <div id="controls">
-    <!-- Add your desired controls here -->
+    <!-- Buttons to change the color of the circles -->
+    <button onclick="updateCircles('color', 'red')">Red</button>
+    <button onclick="updateCircles('color', 'green')">Green</button>
+    <button onclick="updateCircles('color', 'blue')">Blue</button>
+    
+    <!-- Buttons to change the size of the circles -->
+    <button onclick="updateCircles('size', 'small')">Small</button>
+    <button onclick="updateCircles('size', 'medium')">Medium</button>
+    <button onclick="updateCircles('size', 'large')">Large</button>
+
+    <!-- Buttons to change the number of circles -->
+    <button onclick="updateCircles('number', 1)">One Circle</button>
+    <button onclick="updateCircles('number', 2)">Two Circles</button>
+    <button onclick="updateCircles('number', 3)">Three Circles</button>
 </div>
 
 <script>
-    document.addEventListener("DOMContentLoaded", function() {
-        // Get the iframe and image elements
-        var iframe = document.getElementById('d3-iframe');
-        var d3Image = document.getElementById('d3-image');
+    var iframe = document.getElementById('d3-iframe');
+    var d3Image = document.getElementById('d3-image');
+    var circleProperties = [{x: 150, y: 150, radius: 50, color: 'green'}]; // Default properties
 
-        // Listen for the 'render' message from the visualization
-        window.addEventListener('message', function(event) {
-            if (event.data.type === 'render') {
-                // When received, update the A-Frame texture directly
-                d3Image.setAttribute('src', event.data.dataUrl);
+    // Function to update the circles based on user input
+    function updateCircles(property, value) {
+        if (property === 'color') {
+            circleProperties.forEach(function(circle) {
+                circle.color = value;
+            });
+        } else if (property === 'size') {
+            var sizes = { small: 30, medium: 50, large: 70 };
+            circleProperties.forEach(function(circle) {
+                circle.radius = sizes[value];
+            });
+        } else if (property === 'number') {
+            circleProperties = []; // Reset the array
+            for (var i = 0; i < value; i++) {
+                // Add circles with default or previous properties
+                circleProperties.push({x: 100 + (i * 50), y: 150, radius: 50, color: 'green'});
             }
-        });
+        }
 
-        // TODO: Add event listeners for user controls, which will post messages to the iframe
+        // Send the updated properties to the iframe to redraw
+        iframe.contentWindow.postMessage({
+            type: 'updateVisualization',
+            circleProperties: circleProperties
+        }, '*');
+    }
+
+    // Listen for the 'render' message from the visualization
+    window.addEventListener('message', function(event) {
+        if (event.data.type === 'render') {
+            d3Image.setAttribute('src', event.data.dataUrl);
+        }
     });
 </script>
 
