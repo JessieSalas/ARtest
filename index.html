@@ -5,7 +5,8 @@
     <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
     <style>
         body { margin: 0; overflow: hidden; }
-        #slider-container { position: fixed; bottom: 10px; width: 100%; text-align: center; }
+        #control-container { position: fixed; bottom: 10px; width: 100%; text-align: center; padding: 5px; background: rgba(255,255,255,0.6); }
+        .control { margin: 5px; }
     </style>
 </head>
 <body>
@@ -20,24 +21,50 @@
     <a-entity camera></a-entity>
 </a-scene>
 
-<div id="slider-container">
-    <input type="range" min="10" max="100" value="50" id="myRange">
+<div id="control-container">
+    <!-- Control to change color -->
+    <select id="colorSelector" class="control">
+        <option value="green">Green</option>
+        <option value="red">Red</option>
+        <option value="blue">Blue</option>
+    </select>
+
+    <!-- Control for size -->
+    <select id="sizeSelector" class="control">
+        <option value="small">Small</option>
+        <option value="medium">Medium</option>
+        <option value="large">Large</option>
+    </select>
+
+    <!-- Control for number of circles -->
+    <select id="numberSelector" class="control">
+        <option value="1">One Circle</option>
+        <option value="2">Two Circles</option>
+        <option value="3">Three Circles</option>
+    </select>
 </div>
 
 <iframe id="d3-iframe" style="display:none;" src="visualization.html"></iframe>
 
 <script>
-    var slider = document.getElementById('myRange');
     var iframe = document.getElementById('d3-iframe');
 
-    slider.addEventListener('input', function() {
-        iframe.contentWindow.postMessage({ type: 'updateRadius', value: this.value }, '*');
+    document.querySelectorAll('.control').forEach(function(control) {
+        control.addEventListener('change', function() {
+            var message = {
+                type: 'updateVisualization',
+                color: document.getElementById('colorSelector').value,
+                size: document.getElementById('sizeSelector').value,
+                number: document.getElementById('numberSelector').value
+            };
+            iframe.contentWindow.postMessage(message, '*');
+        });
     });
 
     window.addEventListener('message', function(event) {
         if (event.data.type === 'render') {
             var img = document.getElementById('d3-image');
-            img.src = event.data.dataUrl;  // Receive the data URL from D3 visualization
+            img.src = event.data.dataUrl;
         }
     });
 </script>
