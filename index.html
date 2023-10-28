@@ -3,65 +3,43 @@
 <head>
     <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
     <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
-    <script src="https://d3js.org/d3.v5.min.js"></script>
     <style>
         body { margin: 0; overflow: hidden; }
-        #ar-container { position: relative; }
-        #slider { position: fixed; bottom: 10px; left: 50%; transform: translateX(-50%); }
+        #slider-container { position: fixed; bottom: 10px; width: 100%; text-align: center; }
     </style>
 </head>
 <body>
 
-<div id="ar-container">
-    <a-scene embedded arjs='sourceType: webcam;'>
-        <a-assets>
-            <canvas id="d3-canvas" width="300" height="300"></canvas>
-        </a-assets>
-        <a-marker preset="hiro">
-            <a-plane position="0 0 0" rotation="-90 0 0" width="1" height="1" material="src: #d3-canvas; side: double;"></a-plane>
-        </a-marker>
-        <a-entity camera></a-entity>
-    </a-scene>
-</div>
+<a-scene embedded arjs='sourceType: webcam;'>
+    <a-assets>
+        <img id="d3-image" crossorigin="anonymous">
+    </a-assets>
+    <a-marker preset="hiro">
+        <a-plane position="0 0 0" rotation="-90 0 0" width="1" height="1" material="src: #d3-image;"></a-plane>
+    </a-marker>
+    <a-entity camera></a-entity>
+</a-scene>
 
-<div id="slider">
+<div id="slider-container">
     <input type="range" min="10" max="100" value="50" id="myRange">
 </div>
 
+<iframe id="d3-iframe" style="display:none;" src="visualization.html"></iframe>
+
 <script>
-    var d3Canvas = document.getElementById('d3-canvas');
-    var context = d3Canvas.getContext('2d');
     var slider = document.getElementById('myRange');
+    var iframe = document.getElementById('d3-iframe');
 
-    function drawCircle(radius) {
-        context.clearRect(0, 0, d3Canvas.width, d3Canvas.height); // Clear the canvas
-        context.beginPath();
-        context.arc(150, 150, radius, 0, 2 * Math.PI, false);
-        context.fillStyle = 'green';
-        context.fill();
-        updateTexture(); // Update the texture in A-Frame after drawing
-    }
-
-    function updateTexture() {
-        var plane = document.querySelector('a-plane');
-        var material = plane.getObject3D('mesh').material;
-        material.map.image = d3Canvas;
-        material.map.needsUpdate = true;
-        material.needsUpdate = true;
-    }
-
-    // Initial draw
-    drawCircle(parseInt(slider.value));
-
-    slider.addEventListener("input", function() {
-        drawCircle(parseInt(this.value));
+    slider.addEventListener('input', function() {
+        iframe.contentWindow.postMessage({ type: 'updateRadius', value: this.value }, '*');
     });
 
-    // For AR.js to work properly, especially on mobile devices, it's important to handle the 'touchmove' event.
-    document.addEventListener('touchmove', function(e) {
-        e.preventDefault();
-    }, { passive: false });
-
+    window.addEventListener('message', function(event) {
+        if (event.data.type === 'render') {
+            var img = document.getElementById('d3-image');
+            img.src = event.data.dataUrl;  // Receive the data URL from D3 visualization
+        }
+    });
 </script>
 
 </body>
