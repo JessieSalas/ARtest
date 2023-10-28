@@ -1,13 +1,32 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>AR Data Visualization</title>
+    <meta charset="UTF-8">
+    <!-- Ensuring proper scaling on mobile devices -->
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <!-- A-Frame and AR.js libraries -->
     <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
     <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
+
     <style>
-        body { margin: 0; overflow: hidden; }
-        #control-container { position: fixed; bottom: 10px; width: 100%; text-align: center; padding: 5px; background: rgba(255,255,255,0.6); }
-        .control { margin: 5px; }
+        body { 
+            margin: 0; 
+            overflow: hidden; 
+        }
+        #control-container { 
+            position: fixed; 
+            bottom: 10px; 
+            width: 100%; 
+            text-align: center; 
+            padding: 5px; 
+            background: rgba(255,255,255,0.6); 
+            z-index: 999;  /* ensures the controls are above other elements */
+        }
+        .control { 
+            margin: 5px; 
+        }
     </style>
 </head>
 <body>
@@ -23,21 +42,19 @@
 </a-scene>
 
 <div id="control-container">
-    <!-- Control to change color -->
+    <!-- Control elements for various properties -->
     <select id="colorSelector" class="control">
         <option value="green">Green</option>
         <option value="red">Red</option>
         <option value="blue">Blue</option>
     </select>
 
-    <!-- Control for size -->
     <select id="sizeSelector" class="control">
         <option value="small">Small</option>
         <option value="medium">Medium</option>
         <option value="large">Large</option>
     </select>
 
-    <!-- Control for number of circles -->
     <select id="numberSelector" class="control">
         <option value="1">One Circle</option>
         <option value="2">Two Circles</option>
@@ -48,25 +65,37 @@
 <iframe id="d3-iframe" style="display:none;" src="visualization.html"></iframe>
 
 <script>
-    var iframe = document.getElementById('d3-iframe');
+    document.addEventListener('DOMContentLoaded', (event) => {
+        const iframe = document.getElementById('d3-iframe');
 
-    document.querySelectorAll('.control').forEach(function(control) {
-        control.addEventListener('change', function() {
-            var message = {
+        // Function to handle control change
+        function handleControlChange() {
+            const message = {
                 type: 'updateVisualization',
                 color: document.getElementById('colorSelector').value,
                 size: document.getElementById('sizeSelector').value,
                 number: document.getElementById('numberSelector').value
             };
             iframe.contentWindow.postMessage(message, '*');
-        });
-    });
-
-    window.addEventListener('message', function(event) {
-        if (event.data.type === 'render') {
-            var img = document.getElementById('d3-image');
-            img.src = event.data.dataUrl;
         }
+
+        // Attaching event listeners to each control
+        document.querySelectorAll('.control').forEach((control) => {
+            control.addEventListener('change', handleControlChange);
+            
+            // Prevent touch event interference with AR view
+            control.addEventListener('touchstart', function(e) {
+                e.stopPropagation();
+            }, { passive: false }); // ensures that the event listener doesn't neglect preventDefault
+        });
+
+        // Listen for messages from the iframe
+        window.addEventListener('message', function(event) {
+            if (event.data.type === 'render') {
+                const img = document.getElementById('d3-image');
+                img.setAttribute('src', event.data.dataUrl); // Use setAttribute for elements within a-scene
+            }
+        });
     });
 </script>
 
