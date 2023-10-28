@@ -1,51 +1,38 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <meta charset="utf-8">
     <script src="https://d3js.org/d3.v5.min.js"></script>
-    <style>
-        body {
-            margin: 0;
-        }
-        /* Add any additional styling you need for your visualization */
-    </style>
 </head>
 <body>
+
+<canvas id="d3-canvas" width="300" height="300"></canvas>
+
 <script>
-    // Create a canvas element. We're using D3.js, but we're drawing on a canvas so we can integrate with A-Frame/WebGL.
-    var canvas = d3.select("body").append("canvas")
-                    .attr("width", 300)
-                    .attr("height", 300)
-                    .node();
+    var canvas = document.getElementById('d3-canvas');
+    var context = canvas.getContext('2d');
 
-    var context = canvas.getContext("2d");
-
-    // Function to draw a circle with a variable radius on the canvas.
     function drawCircle(radius) {
-        // Clear the previous content. Important to avoid drawing over the previous frame.
         context.clearRect(0, 0, canvas.width, canvas.height);
-
-        // Draw the new circle.
         context.beginPath();
         context.arc(150, 150, radius, 0, 2 * Math.PI, false);
-        context.fillStyle = 'green'; // Or any other color or logic you prefer.
+        context.fillStyle = 'green';
         context.fill();
+        sendImage(); // Send the canvas data to the parent document
     }
 
-    // Default circle, you can set this to match whatever initial state you prefer.
-    drawCircle(50);
+    function sendImage() {
+        var dataUrl = canvas.toDataURL();
+        window.parent.postMessage({ type: 'render', dataUrl: dataUrl }, '*');
+    }
 
-    // Listen for messages from the parent document. This is how we'll communicate with the AR scene.
+    drawCircle(50); // Draw a default circle
+
     window.addEventListener('message', function(event) {
-        // Validate message information for security if necessary. Be cautious with `event.origin` and the data you're expecting.
-        if (event.data && event.data.type === 'updateRadius') {
-            // Call the drawing function with the new radius.
+        if (event.data.type === 'updateRadius') {
             drawCircle(event.data.value);
         }
-    }, false);
-
-    // The setup is done. Now the page listens for messages and updates the canvas drawing accordingly.
-
+    });
 </script>
+
 </body>
 </html>
