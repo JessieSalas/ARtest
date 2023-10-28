@@ -10,31 +10,44 @@
 <script>
     var canvas = document.getElementById('d3-canvas');
     var context = canvas.getContext('2d');
+    var currentParams = {
+        color: 'green',
+        size: 'medium',
+        number: 1
+    };
 
-    // Function to draw one or multiple circles
-    function drawCircles(circleProperties) {
-        // Clear the canvas before drawing the next frame
+    function drawCircles(params) {
+        var sizes = { small: 40, medium: 70, large: 100 };
+        var positions = [150]; // Default for one circle
+
+        if (params.number === '2') { positions = [100, 200]; }
+        else if (params.number === '3') { positions = [75, 150, 225]; }
+
         context.clearRect(0, 0, canvas.width, canvas.height);
 
-        circleProperties.forEach(function(circle) {
+        positions.forEach(function(pos) {
             context.beginPath();
-            context.arc(circle.x, circle.y, circle.radius, 0, 2 * Math.PI, false);
-            context.fillStyle = circle.color;
+            context.arc(pos, 150, sizes[params.size], 0, 2 * Math.PI, false);
+            context.fillStyle = params.color;
             context.fill();
         });
 
-        // Send the rendered image back to the main document
-        var dataUrl = canvas.toDataURL("image/png");
+        sendImage();
+    }
+
+    function sendImage() {
+        var dataUrl = canvas.toDataURL();
         window.parent.postMessage({ type: 'render', dataUrl: dataUrl }, '*');
     }
 
-    // Default drawing
-    drawCircles([{x: 150, y: 150, radius: 50, color: 'green'}]);
+    drawCircles(currentParams); // Draw with default settings
 
-    // Listen for messages to redraw with new properties
     window.addEventListener('message', function(event) {
         if (event.data.type === 'updateVisualization') {
-            drawCircles(event.data.circleProperties);
+            currentParams.color = event.data.color || currentParams.color;
+            currentParams.size = event.data.size || currentParams.size;
+            currentParams.number = event.data.number || currentParams.number;
+            drawCircles(currentParams);
         }
     });
 </script>
