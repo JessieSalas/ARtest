@@ -1,53 +1,70 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <script src="https://d3js.org/d3.v5.min.js"></script>
+    <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
+    <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
+    <style>
+        body { margin: 0; overflow: hidden; }
+        #control-container { position: fixed; bottom: 10px; width: 100%; text-align: center; padding: 5px; background: rgba(255,255,255,0.6); }
+        .control { margin: 5px; }
+    </style>
 </head>
 <body>
 
-<canvas id="d3-canvas" width="300" height="300"></canvas>
+<a-scene embedded arjs='sourceType: webcam;'>
+    <a-assets>
+        <img id="d3-image" crossorigin="anonymous">
+    </a-assets>
+    <a-marker preset="hiro">
+        <a-plane position="0 0 0" rotation="-90 0 0" width="1" height="1" material="src: #d3-image;"></a-plane>
+    </a-marker>
+    <a-entity camera></a-entity>
+</a-scene>
+
+<div id="control-container">
+    <!-- Control to change color -->
+    <select id="colorSelector" class="control">
+        <option value="green">Green</option>
+        <option value="red">Red</option>
+        <option value="blue">Blue</option>
+    </select>
+
+    <!-- Control for size -->
+    <select id="sizeSelector" class="control">
+        <option value="small">Small</option>
+        <option value="medium">Medium</option>
+        <option value="large">Large</option>
+    </select>
+
+    <!-- Control for number of circles -->
+    <select id="numberSelector" class="control">
+        <option value="1">One Circle</option>
+        <option value="2">Two Circles</option>
+        <option value="3">Three Circles</option>
+    </select>
+</div>
+
+<iframe id="d3-iframe" style="display:none;" src="visualization.html"></iframe>
 
 <script>
-    var canvas = document.getElementById('d3-canvas');
-    var context = canvas.getContext('2d');
-    var currentParams = {
-        color: 'green',
-        size: 'medium',
-        number: 1
-    };
+    var iframe = document.getElementById('d3-iframe');
 
-    function drawCircles(params) {
-        var sizes = { small: 40, medium: 70, large: 100 };
-        var positions = [150]; // Default for one circle
-
-        if (params.number === '2') { positions = [100, 200]; }
-        else if (params.number === '3') { positions = [75, 150, 225]; }
-
-        context.clearRect(0, 0, canvas.width, canvas.height);
-
-        positions.forEach(function(pos) {
-            context.beginPath();
-            context.arc(pos, 150, sizes[params.size], 0, 2 * Math.PI, false);
-            context.fillStyle = params.color;
-            context.fill();
+    document.querySelectorAll('.control').forEach(function(control) {
+        control.addEventListener('change', function() {
+            var message = {
+                type: 'updateVisualization',
+                color: document.getElementById('colorSelector').value,
+                size: document.getElementById('sizeSelector').value,
+                number: document.getElementById('numberSelector').value
+            };
+            iframe.contentWindow.postMessage(message, '*');
         });
-
-        sendImage();
-    }
-
-    function sendImage() {
-        var dataUrl = canvas.toDataURL();
-        window.parent.postMessage({ type: 'render', dataUrl: dataUrl }, '*');
-    }
-
-    drawCircles(currentParams); // Draw with default settings
+    });
 
     window.addEventListener('message', function(event) {
-        if (event.data.type === 'updateVisualization') {
-            currentParams.color = event.data.color || currentParams.color;
-            currentParams.size = event.data.size || currentParams.size;
-            currentParams.number = event.data.number || currentParams.number;
-            drawCircles(currentParams);
+        if (event.data.type === 'render') {
+            var img = document.getElementById('d3-image');
+            img.src = event.data.dataUrl;
         }
     });
 </script>
