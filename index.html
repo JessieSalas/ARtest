@@ -91,6 +91,10 @@
         document.querySelectorAll('.control').forEach(function(control) {
             control.addEventListener('change', updateEntity);
         });
+        window.addEventListener('touchmove', function(e) {
+            e.preventDefault();
+        }, { passive: false }); // Important to mark as non-passive so it's cancelable
+
     });
 </script>
 
